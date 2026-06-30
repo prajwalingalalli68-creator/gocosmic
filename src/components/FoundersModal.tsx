@@ -134,7 +134,7 @@ export function FoundersModal({ isOpen, onClose }: FoundersModalProps) {
               <div>
                 <h3 className="text-lg font-semibold text-cyan-400 uppercase tracking-wider mb-6 flex items-center gap-3">
                   <span className="w-3 h-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-                  Junior Captains
+                  Juniors
                 </h3>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
