@@ -38,8 +38,10 @@ export function ChatTool() {
       const responseText = await geminiService.chat(history, userMsg.text);
       
       setMessages(prev => [...prev, { role: 'model', text: responseText || "I couldn't generate a response." }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', text: "Sorry, I encountered an error. Please try again." }]);
+    } catch (error: any) {
+      console.error("Chat tool error:", error);
+      const errMsg = error?.message || "Sorry, I encountered an error. Please try again.";
+      setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error: ${errMsg}` }]);
     } finally {
       setIsLoading(false);
     }

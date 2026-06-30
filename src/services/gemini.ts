@@ -1,9 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the client
-// Note: In a real production app, you might want to handle this more robustly
-// but for this environment, process.env.GEMINI_API_KEY is injected.
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI(): GoogleGenAI {
+  if (aiInstance) return aiInstance;
+  
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.trim() === "") {
+    throw new Error("API_KEY_MISSING: Gemini API Key is missing. Please configure your GEMINI_API_KEY to start using the AI tools.");
+  }
+  
+  aiInstance = new GoogleGenAI({ apiKey });
+  return aiInstance;
+}
 
 export type Message = {
   role: "user" | "model";
@@ -21,7 +30,7 @@ export const geminiService = {
       
       // We'll use a fresh chat for now to keep it simple, or maintain state in the component
       // Let's use the chat model for better context handling
-      const chat = ai.chats.create({
+      const chat = getAI().chats.create({
         model: "gemini-3.5-flash",
         history: history.map(h => ({
           role: h.role,
@@ -41,7 +50,7 @@ export const geminiService = {
   async generateImage(prompt: string) {
     try {
       // Primary method: Use Interactions API with gemini-3.1-flash-image as requested
-      const interaction = await ai.interactions.create({
+      const interaction = await getAI().interactions.create({
         model: "gemini-3.1-flash-image",
         input: prompt,
         response_modalities: ["image", "text"],
@@ -75,7 +84,7 @@ export const geminiService = {
       
       // Fallback method: try generating content directly with gemini-2.5-flash-image if interaction is not supported/404ed
       try {
-        const fallbackResponse = await ai.models.generateContent({
+        const fallbackResponse = await getAI().models.generateContent({
           model: "gemini-2.5-flash-image",
           contents: {
             parts: [{ text: prompt }]
@@ -113,7 +122,7 @@ export const geminiService = {
   // 4. Grounded Search
   async generateContentWithSearch(prompt: string) {
     try {
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {
@@ -125,7 +134,7 @@ export const geminiService = {
       console.error("Search info error:", error);
       // Fallback to standard generation if search grounding fails (e.g. permission issues)
       try {
-        const fallbackResponse = await ai.models.generateContent({
+        const fallbackResponse = await getAI().models.generateContent({
           model: "gemini-3.5-flash",
           contents: prompt,
         });
@@ -147,7 +156,7 @@ export const geminiService = {
       const mimeType = matches[1];
       const base64Data = matches[2];
       
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: "gemini-3.5-flash",
         contents: {
           parts: [
